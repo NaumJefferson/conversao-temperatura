@@ -1,0 +1,52 @@
+name: CI-CD
+
+on:
+  push:
+    branches: [ main ]
+    
+  workflow_dispatch:
+
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Docker Login
+        uses: docker/login-action@v1.10.0
+        with:
+          username: ${{secrets.DOCKERHUB_USER}}
+          password: ${{secrets.DOCKERHUB_PASSWORD}}
+      
+      - name: Docker Build and Push
+        uses: docker/build-push-action@v2.7.0
+        with:
+          context: ./src
+          file: ./src/Dockerfile
+          push: true
+          tags: |
+            na1jefferson/conversao-temperatura:latest
+            na1jefferson/conversao-temperatura:v${{github.run_number}}
+            
+  CD:
+    needs: [CI]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        
+      - name: Kubernetes set context
+        uses: azure/k8s-set-context@v1
+        with:
+          method: kubeconfig
+          kubeconfig: ${{secrets.K8S_KUBECONFIG}}
+        
+      - name: Deploy
+        uses: Azure/k8s-deploy@v1.3
+        with:
+          images: na1jefferson/conversao-temperatura:v${{github.run_number}}
+          manifests: |
+            k8s/deployment.yaml
