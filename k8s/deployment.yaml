@@ -3,33 +3,33 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: web
+  name: temperatura-web
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: web
+      app: temperatura-web
   template:
     metadata:
       labels:
-        app: web
+        app: temperatura-web
     spec:
       containers:
-        - name: web
+        - name: temperatura-web
           image: na1jefferson/conversao-temperatura:v1
           ports:
             - containerPort: 8080
 ---
-# Service do web
+# Service do temperatura-web
 apiVersion: v1
 kind: Service
 metadata:
-  name: web
+  name: temperatura-web
 spec:
   selector:
-    app: web
+    app: temperatura-web
   ports:
     - port: 80
       targetPort: 8080
-      nodePort: 30000
-  type: NodePort
+      nodePort: 30002
+  type: LoadBalancer
